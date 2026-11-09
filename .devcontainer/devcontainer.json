@@ -1,0 +1,16 @@
+{
+  "name": "AI Agent Sandbox",
+  "dockerComposeFile": "../compose.yaml",
+  "service": "agent",
+  "workspaceFolder": "/workspace",
+  "remoteUser": "agent",
+  "shutdownAction": "stopCompose",
+  "overrideCommand": false,
+  "customizations": {
+    "vscode": {
+      "extensions": [
+        "openai.chatgpt"
+      ]
+    }
+  }
+}

@@ -1,0 +1,77 @@
+
+services:
+  agent:
+    build:
+      context: .
+      dockerfile: Dockerfile
+
+    working_dir: /workspace
+    user: agent
+
+    volumes:
+      # Shared agent workspace
+      - type: bind
+        source: ${PROJECT_DIR}/gc
+        target: /workspace/gc
+
+      - type: bind
+        source: ${PROJECT_DIR}/web
+        target: /workspace/web
+
+      - type: bind
+        source: ${PROJECT_DIR}/evm
+        target: /workspace/evm
+
+      # Shared agent state
+      - type: bind
+        source: ./state/codex
+        target: /home/agent/.codex
+
+      - type: bind
+        source: ./state/claude
+        target: /home/agent/.claude
+
+      - type: bind
+        source: ./state/claude.json
+        target: /home/agent/.claude.json
+
+      # Shared agent instructions (read-only so agents can't change their own rules)
+      - type: bind
+        source: ./config/AGENTS.md
+        target: /home/agent/.claude/CLAUDE.md
+        read_only: true
+
+      - type: bind
+        source: ./config/AGENTS.md
+        target: /home/agent/.codex/AGENTS.md
+        read_only: true
+
+      # Persistent home directory
+      - agent-home:/home/agent
+
+    # Codex Unix sockets need a Linux filesystem owned by the agent (in memory, not persisted)
+    tmpfs:
+      - /home/agent/.codex/ipc:uid=1000,gid=1000,mode=700
+
+    environment:
+      HOME: /home/agent
+      # Match container cpus below
+      CARGO_BUILD_JOBS: 4
+
+    privileged: false
+    cap_drop:
+      - ALL
+    security_opt:
+      - no-new-privileges:true
+
+    mem_limit: 8g
+    cpus: 4
+    pids_limit: 4096
+
+    init: true
+    stdin_open: true
+    tty: true
+    command: sleep infinity
+
+volumes:
+  agent-home:
