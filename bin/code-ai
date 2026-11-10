@@ -1,16 +1,16 @@
 #!/usr/bin/env bash
 # Open a project from the AI sandbox container in a new VS Code window.
 #
-#   ai                  list available projects
-#   ai <project>        open a project inside /workspace
-#   ai .                open the current Mac folder (must be inside PROJECT_DIR)
+#   code-ai                  list available projects
+#   code-ai <project>        open a project inside /workspace
+#   code-ai .                open the current Mac folder (must be inside PROJECT_DIR)
 #
 # Starts the container if it isn't running.
 set -euo pipefail
 
 REPO="$(cd "$(dirname "$(readlink -f "$0")")/.." && pwd)"
 compose() { docker compose --project-directory "$REPO" "$@"; }
-die() { echo "ai: $*" >&2; exit 1; }
+die() { echo "code-ai: $*" >&2; exit 1; }
 
 command -v docker >/dev/null || die "docker not found"
 command -v code >/dev/null || die "'code' not found. In VS Code: Cmd+Shift+P -> 'Shell Command: Install 'code' command in PATH'"
@@ -26,9 +26,10 @@ fi
 name="$(docker inspect -f '{{.Name}}' "$cid")"   # e.g. /ai-sandbox-agent-1
 
 # No argument: list projects (git repos up to 3 levels deep).
-# Skips build/dependency folders and doesn't descend into .git: the bind mount makes every lookup slow.
+# Skips build/dependency folders and doesn't descend into .git:
+# the bind mount makes every lookup slow.
 if [ $# -eq 0 ]; then
-    echo "Usage: ai <project>     e.g. ai my-project"
+    echo "Usage: code-ai <project>     e.g. code-ai my-project"
     echo
     echo "Projects:"
     docker exec "$cid" sh -c 'cd /workspace && find . -mindepth 1 -maxdepth 4 \( -name node_modules -o -name target -o -name .venv -o -name dist -o -name build \) -prune -o -name .git -prune -print 2>/dev/null' \
@@ -38,7 +39,8 @@ fi
 
 arg="$1"
 
-# A Mac folder (e.g. "." or ~/Workspace/gc/x): convert to a path relative to PROJECT_DIR
+# A Mac folder (e.g. "." or ~/Workspace/gc/x):
+# convert to a path relative to PROJECT_DIR
 if [ -d "$arg" ]; then
     proj_dir="$(grep -E '^PROJECT_DIR=' "$REPO/.env" | cut -d= -f2- | tr -d '"'"'")"
     [ -n "$proj_dir" ] || die "PROJECT_DIR not set in $REPO/.env"
@@ -51,11 +53,14 @@ if [ -d "$arg" ]; then
 fi
 
 # Normalise to /workspace/<rel>
-rel="${arg#/workspace}"; rel="${rel#/}"; rel="${rel%/}"
+rel="${arg#/workspace}"
+rel="${rel#/}"
+rel="${rel%/}"
 path="/workspace${rel:+/$rel}"
 
-docker exec "$cid" test -d "$path" || die "$path does not exist in the container (run 'ai' to list projects)"
+docker exec "$cid" test -d "$path" || die "$path does not exist in the container (run 'code-ai' to list projects)"
 
-# Same address VS Code uses for "Attach to Running Container": hex-encoded JSON with the container name
+# Same address VS Code uses for "Attach to Running Container":
+# hex-encoded JSON with the container name
 hex="$(printf '{"containerName":"%s"}' "$name" | od -An -tx1 | tr -d ' \n')"
 code --new-window --folder-uri "vscode-remote://attached-container+${hex}${path// /%20}"

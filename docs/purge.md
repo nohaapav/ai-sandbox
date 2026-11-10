@@ -1,4 +1,6 @@
-# Purge: clean up your Mac after moving to the sandbox
+# Purge
+
+Clean up your Mac after moving to the sandbox !!!
 
 Once agents and builds run inside the container, your Mac no longer needs local agents, language toolchains, or package caches. Removing them:
 
@@ -11,7 +13,7 @@ Do this **last**, after the sandbox has worked for you for a while. Every step i
 
 Confirm the sandbox covers everything you need:
 
-- [ ] `ai <project>` opens your projects attached to the container.
+- [ ] `code-ai <project>` opens your projects attached to the container.
 - [ ] Claude Code and Codex work in the container, and your history shows up (see [troubleshooting.md](troubleshooting.md)).
 - [ ] Your projects build and test inside the container (`docker compose exec agent bash`).
 - [ ] You have a backup (Time Machine or similar).
@@ -131,7 +133,7 @@ rm -rf ~/.foundry ~/.svm                   # Foundry / Solidity compilers
 chmod -R u+w ~/go && rm -rf ~/go           # Go (the module cache is read-only by design)
 ```
 
-Some toolchain folders also hold keys. For example, Foundry keeps keystores in `~/.foundry/keystores`, and Sui keeps its keystore in `~/.sui`. Back up anything you need before deleting.
+Some toolchain folders also hold keys. For example, Foundry keeps keystores in `~/.foundry/keystores`. Back up anything you need before deleting.
 
 ### Tools installed outside your home folder
 
@@ -170,36 +172,6 @@ brew autoremove && brew cleanup --prune=all
 `brew uninstall` stops at the first formula it can't remove, for example one that another formula still needs. Read the error, then run it again without that formula.
 
 **Keep the Xcode Command Line Tools** if you use `git` or Homebrew on the Mac. Removing them also removes macOS's `git`.
-
-### Intel Homebrew on Apple Silicon
-
-On an Apple Silicon Mac, check:
-
-```bash
-brew --prefix    # /opt/homebrew = native; /usr/local = Intel, runs under Rosetta
-uname -m         # in a new terminal: arm64 = native; x86_64 = running under Rosetta
-```
-
-A Homebrew in `/usr/local` installs Intel builds. If your login shell comes from it, everything you start from that shell runs under Rosetta, including tools that install themselves, which then pick their Intel version too. To move to a native Homebrew, keep this order:
-
-1. Save the list of what you use: `brew leaves` and `brew list --cask`.
-2. Install the native Homebrew. `arch -arm64` makes sure it doesn't install the Intel version again:
-   ```bash
-   arch -arm64 /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
-   ```
-3. Add `eval "$(/opt/homebrew/bin/brew shellenv)"` to your shell config, and reinstall what you still need with `/opt/homebrew/bin/brew install ...`.
-4. If your login shell came from the old Homebrew, switch it to the native one:
-   ```bash
-   echo /opt/homebrew/bin/bash | sudo tee -a /etc/shells && chsh -s /opt/homebrew/bin/bash
-   ```
-   Quit and reopen Terminal and VS Code, then check that `uname -m` prints `arm64`.
-5. Uninstall the old Homebrew:
-   ```bash
-   /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/uninstall.sh)" -- --path=/usr/local
-   ```
-   Casks with their own uninstallers (for example VirtualBox) need your password, so uninstall them first in a terminal.
-
-The first install downloads Homebrew's full history and shows no progress for a few minutes. It isn't stuck.
 
 ## 6. Clean up your shell config
 

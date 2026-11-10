@@ -35,7 +35,7 @@ ai-sandbox/
 ├── .devcontainer/
 │   └── devcontainer.json
 ├── bin/
-│   └── ai
+│   └── code-ai
 ├── config/
 │   └── AGENTS.md
 ├── docs/
@@ -224,9 +224,9 @@ Extensions installed locally on macOS are separate from extensions installed in 
 
 Agent commands and extension backends execute inside the container.
 
-### Opening projects with `ai`
+### Opening projects with `code-ai`
 
-The `bin/ai` script opens a project in a new VS Code window, already attached to the container.
+The `bin/code-ai` script opens a project in a new VS Code window, already attached to the container.
 
 Add this to `~/.zshrc`, then open a new terminal:
 
@@ -237,8 +237,8 @@ export PATH="$HOME/Agents/ai-sandbox/bin:$PATH"
 Usage:
 
 ```bash
-ai                    # lists projects (starts the container if it's stopped)
-ai gc/hydration-ui    # opens that project in a new window, attached to the container
+code-ai                 # lists projects
+code-ai your-project    # opens that project in a new window, attached to the container
 ```
 
 ### Recommended VS Code settings
