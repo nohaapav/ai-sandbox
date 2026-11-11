@@ -352,6 +352,18 @@ They do not automatically receive access to the host macOS shell or files outsid
 
 Only mount directories you intend to expose to agents.
 
+### Deployment isolation
+
+The deployment container runs independently of the AI development container, with separate processes and environment variables.
+
+Both containers share project directories and installed tooling, but AI agents do not automatically have access to deployment processes or credentials.
+
+Deployment shell history is disabled (`HISTFILE=/dev/null`, `HISTSIZE=0`) to prevent private keys entered in commands from being persisted to the shared home directory.
+
+This isolation assumes neither container has Docker daemon access or elevated host privileges.
+
+**Important:** Because project files and tooling are shared, agents can modify code executed during deployment. Review changes before deploying.
+
 ## Troubleshooting
 
 See [docs/troubleshooting.md](docs/troubleshooting.md) for:

@@ -1,64 +1,74 @@
-
 services:
   agent:
+    image: ai-sandbox-agent:latest
+
     build:
       context: .
       dockerfile: Dockerfile
+      target: agent
 
     working_dir: /workspace
     user: agent
 
     volumes:
-      # Shared agent workspace
-      - type: bind
-        source: ${PROJECT_DIR}/gc
-        target: /workspace/gc
+      # Shared workspace
+      - ${PROJECT_DIR}/gc:/workspace/gc
+      - ${PROJECT_DIR}/web:/workspace/web
+      - ${PROJECT_DIR}/evm:/workspace/evm
 
-      - type: bind
-        source: ${PROJECT_DIR}/web
-        target: /workspace/web
+      # Persistent agent state
+      - ./state/codex:/home/agent/.codex
+      - ./state/claude:/home/agent/.claude
+      - ./state/claude.json:/home/agent/.claude.json
 
-      - type: bind
-        source: ${PROJECT_DIR}/evm
-        target: /workspace/evm
+      # Shared agent instructions (read-only)
+      - ./config/AGENTS.md:/home/agent/.claude/CLAUDE.md:ro
+      - ./config/AGENTS.md:/home/agent/.codex/AGENTS.md:ro
 
-      # Shared agent state
-      - type: bind
-        source: ./state/codex
-        target: /home/agent/.codex
-
-      - type: bind
-        source: ./state/claude
-        target: /home/agent/.claude
-
-      - type: bind
-        source: ./state/claude.json
-        target: /home/agent/.claude.json
-
-      # Shared agent instructions (read-only so agents can't change their own rules)
-      - type: bind
-        source: ./config/AGENTS.md
-        target: /home/agent/.claude/CLAUDE.md
-        read_only: true
-
-      - type: bind
-        source: ./config/AGENTS.md
-        target: /home/agent/.codex/AGENTS.md
-        read_only: true
-
-      # Persistent home directory
+      # Persistent home / installed tooling
       - agent-home:/home/agent
 
-    # Codex Unix sockets need a Linux filesystem owned by the agent (in memory, not persisted)
+    # Codex Unix sockets need a Linux filesystem
     tmpfs:
       - /home/agent/.codex/ipc:uid=1000,gid=1000,mode=700
 
     environment:
-      HOME: /home/agent
-      # Match container cpus below
       CARGO_BUILD_JOBS: 4
 
-    privileged: false
+    cap_drop:
+      - ALL
+    security_opt:
+      - no-new-privileges:true
+
+    mem_limit: 8g
+    cpus: 4
+    pids_limit: 4096
+
+    init: true
+    stdin_open: true
+    tty: true
+    command: sleep infinity
+
+  deploy:
+    image: ai-sandbox-deploy:latest
+
+    build:
+      context: .
+      dockerfile: Dockerfile
+      target: deploy
+
+    working_dir: /workspace
+    user: agent
+
+    volumes:
+      # Same writable workspace
+      - ${PROJECT_DIR}/gc:/workspace/gc
+      - ${PROJECT_DIR}/web:/workspace/web
+      - ${PROJECT_DIR}/evm:/workspace/evm
+
+      # Same installed Node.js, Foundry, Rust, mise, etc.
+      - agent-home:/home/agent
+
     cap_drop:
       - ALL
     security_opt:
