@@ -69,6 +69,12 @@ services:
       # Same installed Node.js, Foundry, Rust, mise, etc.
       - agent-home:/home/agent
 
+    # Hide vscode & agents
+    tmpfs:
+    - /home/agent/.vscode-server:uid=1000,gid=1000,mode=700
+    - /home/agent/.codex:uid=1000,gid=1000,mode=700
+    - /home/agent/.claude:uid=1000,gid=1000,mode=700
+
     cap_drop:
       - ALL
     security_opt:
